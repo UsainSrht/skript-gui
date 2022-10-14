@@ -10,6 +10,8 @@ import ch.njol.skript.lang.ExpressionType;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryType;
@@ -42,7 +44,7 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 
 	// The name of this inventory.
 	@Nullable
-	private String invName;
+	private Component invName;
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -70,7 +72,6 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 					break;
 			}
 		}
-
 		if (matchedPattern > 1) {
 			name = (Expression<String>) exprs[1];
 			rows = (Expression<Number>) exprs[2];
@@ -78,7 +79,6 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 			name = (Expression<String>) exprs[2];
 			rows = (Expression<Number>) exprs[1];
 		}
-
 		return true;
 	}
 
@@ -92,7 +92,7 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 		}
 
 		String name = this.name != null ? this.name.getSingle(e) : null;
-		invName = name != null ? name : type.getDefaultTitle();
+		invName = name != null ? MiniMessage.miniMessage().deserialize(name) : type.defaultTitle();
 
 		Inventory inventory;
 		if (type == InventoryType.CHEST) {
@@ -138,8 +138,8 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 	 * @return The name of this inventory. If {@link #invName} is null
 	 * when this method is called, an empty string will be returned.
 	 */
-	public String getName() {
-		return invName != null ? invName : "";
+	public Component getName() {
+		return invName != null ? invName : Component.empty();
 	}
 
 }

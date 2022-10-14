@@ -1,6 +1,8 @@
 package io.github.apickledwalrus.skriptgui.gui;
 
 import io.github.apickledwalrus.skriptgui.SkriptGUI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
@@ -13,6 +15,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.eclipse.jdt.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +26,7 @@ import java.util.function.Consumer;
 public class GUI {
 
 	private Inventory inventory;
-	private String name;
+	private Component name;
 
 	private final GUIEventHandler eventHandler = new GUIEventHandler() {
 		@Override
@@ -126,10 +129,11 @@ public class GUI {
 	@Nullable
 	private String id;
 
-	public GUI(Inventory inventory, boolean stealableItems, @Nullable String name) {
+	public GUI(Inventory inventory, boolean stealableItems, Component name) {
 		this.inventory = inventory;
 		this.removableItems = stealableItems;
-		this.name = name != null ? name : inventory.getType().getDefaultTitle();
+		this.name = name;
+		Bukkit.broadcast(Component.text("gui created " + name + inventory));
 		SkriptGUI.getGUIManager().register(this);
 	}
 
@@ -145,11 +149,11 @@ public class GUI {
 		changeInventory(size, getName());
 	}
 
-	public String getName() {
+	public Component getName() {
 		return name;
 	}
 
-	public void setName(@Nullable String name) {
+	public void setName(Component name) {
 		changeInventory(inventory.getSize(), name);
 	}
 
@@ -164,10 +168,9 @@ public class GUI {
 		slots.clear();
 	}
 
-	private void changeInventory(int size, @Nullable String name) {
-		if (name == null) {
-			name = inventory.getType().getDefaultTitle();
-		} else if (size < 9 ) { // Minimum size
+	private void changeInventory(int size, Component name) {
+
+		if (size < 9 ) { // Minimum size
 			size = 9;
 		} else if (size > 54) { // Maximum size
 			size = 54;
@@ -179,9 +182,9 @@ public class GUI {
 
 		Inventory newInventory;
 		if (inventory.getType() == InventoryType.CHEST) {
-			newInventory = Bukkit.getServer().createInventory(null, size, name);
+			newInventory = Bukkit.createInventory(null, size, name);
 		} else {
-			newInventory = Bukkit.getServer().createInventory(null, inventory.getType(), name);
+			newInventory = Bukkit.createInventory(null, inventory.getType(), name);
 		}
 
 		if (size >= inventory.getSize()) {

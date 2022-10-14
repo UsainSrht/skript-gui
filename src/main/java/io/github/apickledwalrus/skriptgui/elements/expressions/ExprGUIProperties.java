@@ -12,6 +12,7 @@ import ch.njol.util.Kleenean;
 import ch.njol.util.coll.CollectionUtils;
 import io.github.apickledwalrus.skriptgui.SkriptGUI;
 import io.github.apickledwalrus.skriptgui.gui.GUI;
+import net.kyori.adventure.text.Component;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -85,7 +86,7 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 				case SET:
 					switch (property) {
 						case NAME:
-							gui.setName((String) delta[0]);
+							gui.setName((Component) delta[0]);
 							break;
 						case ROWS:
 							gui.setSize(((Number) delta[0]).intValue() * 9);
@@ -108,7 +109,7 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 				case RESET:
 					switch (property) {
 						case NAME:
-							gui.setName(gui.getInventory().getType().getDefaultTitle());
+							gui.setName(gui.getInventory().getType().defaultTitle());
 							break;
 						case ROWS:
 							gui.setSize(gui.getInventory().getType().getDefaultSize());
