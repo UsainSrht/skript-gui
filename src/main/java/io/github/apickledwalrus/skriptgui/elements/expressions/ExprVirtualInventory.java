@@ -12,6 +12,8 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.ParsingException;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryType;
@@ -46,30 +48,20 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 	@Nullable
 	private Component invName;
 
+	public LegacyComponentSerializer lcs = LegacyComponentSerializer.builder().build();
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean kleenean, ParseResult parseResult) {
 		inventoryType = (Expression<InventoryType>) exprs[0];
 		if (inventoryType == null) { // They must be using a specific one
 			switch (parseResult.mark) {
-				case 1:
-					specifiedType = InventoryType.WORKBENCH;
-					break;
-				case 2:
-					specifiedType = InventoryType.CHEST;
-					break;
-				case 3:
-					specifiedType = InventoryType.ANVIL;
-					break;
-				case 4:
-					specifiedType = InventoryType.HOPPER;
-					break;
-				case 5:
-					specifiedType = InventoryType.DROPPER;
-					break;
-				case 6:
-					specifiedType = InventoryType.DISPENSER;
-					break;
+				case 1 -> specifiedType = InventoryType.WORKBENCH;
+				case 2 -> specifiedType = InventoryType.CHEST;
+				case 3 -> specifiedType = InventoryType.ANVIL;
+				case 4 -> specifiedType = InventoryType.HOPPER;
+				case 5 -> specifiedType = InventoryType.DROPPER;
+				case 6 -> specifiedType = InventoryType.DISPENSER;
 			}
 		}
 		if (matchedPattern > 1) {
@@ -92,7 +84,17 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 		}
 
 		String name = this.name != null ? this.name.getSingle(e) : null;
-		invName = name != null ? MiniMessage.miniMessage().deserialize(name) : type.defaultTitle();
+		if (name == null) invName = type.defaultTitle();
+		else {
+			Component parsedName;
+			try {
+				parsedName = MiniMessage.miniMessage().deserialize(name);
+			}
+			catch (ParsingException ex) {
+				parsedName = lcs.deserialize(name);
+			}
+			invName = parsedName;
+		}
 
 		Inventory inventory;
 		if (type == InventoryType.CHEST) {

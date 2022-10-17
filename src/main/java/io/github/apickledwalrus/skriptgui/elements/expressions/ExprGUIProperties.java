@@ -13,6 +13,9 @@ import ch.njol.util.coll.CollectionUtils;
 import io.github.apickledwalrus.skriptgui.SkriptGUI;
 import io.github.apickledwalrus.skriptgui.gui.GUI;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.ParsingException;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.event.Event;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -35,6 +38,8 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 	private static final int NAME = 0, ROWS = 1, SHAPE = 2, LOCK_STATUS = 3;
 	private int property;
 
+	public LegacyComponentSerializer lcs = LegacyComponentSerializer.builder().build();
+
 	@Override
 	public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
 		property = parseResult.mark;
@@ -44,17 +49,14 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 	@Override
 	@Nullable
 	public Object convert(GUI gui) {
-		switch (property) {
-			case NAME:
-				return gui.getName();
-			case ROWS:
-				return gui.getInventory().getSize() / 9; // We return rows
-			case SHAPE:
-				return gui.getRawShape();
-			case LOCK_STATUS:
-				return !gui.isRemovable(); // Not removable = locked
-		}
-		return null;
+		return switch (property) {
+			case NAME -> gui.getName();
+			case ROWS -> gui.getInventory().getSize() / 9; // We return rows
+			case SHAPE -> gui.getRawShape();
+			case LOCK_STATUS -> !gui.isRemovable();
+			default -> // Not removable = locked
+					null;
+		};
 	}
 
 	@Override
@@ -85,13 +87,19 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 			switch (mode) {
 				case SET:
 					switch (property) {
-						case NAME:
-							gui.setName((Component) delta[0]);
-							break;
-						case ROWS:
-							gui.setSize(((Number) delta[0]).intValue() * 9);
-							break;
-						case SHAPE:
+						case NAME -> {
+							String nameToBeParsed = (String) delta[0];
+							Component parsedName;
+							try {
+								parsedName = MiniMessage.miniMessage().deserialize(nameToBeParsed);
+							}
+							catch (ParsingException ex) {
+								parsedName = lcs.deserialize(nameToBeParsed);
+							}
+							gui.setName(parsedName);
+						}
+						case ROWS -> gui.setSize(((Number) delta[0]).intValue() * 9);
+						case SHAPE -> {
 							String[] newShape = new String[delta.length];
 							for (int i = 0; i < delta.length; i++) {
 								if (!(delta[i] instanceof String)) {
@@ -100,26 +108,16 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 								newShape[i] = (String) delta[i];
 							}
 							gui.setShape(newShape);
-							break;
-						case LOCK_STATUS:
-							gui.setRemovable(!(boolean) delta[0]);
-							break;
+						}
+						case LOCK_STATUS -> gui.setRemovable(!(boolean) delta[0]);
 					}
 					break;
 				case RESET:
 					switch (property) {
-						case NAME:
-							gui.setName(gui.getInventory().getType().defaultTitle());
-							break;
-						case ROWS:
-							gui.setSize(gui.getInventory().getType().getDefaultSize());
-							break;
-						case SHAPE:
-							gui.resetShape();
-							break;
-						case LOCK_STATUS:
-							gui.setRemovable(false);
-							break;
+						case NAME -> gui.setName(gui.getInventory().getType().defaultTitle());
+						case ROWS -> gui.setSize(gui.getInventory().getType().getDefaultSize());
+						case SHAPE -> gui.resetShape();
+						case LOCK_STATUS -> gui.setRemovable(false);
 					}
 					break;
 				default:
@@ -130,33 +128,23 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 
 	@Override
 	public Class<?> getReturnType() {
-		switch (property) {
-			case NAME:
-			case SHAPE:
-				return String.class;
-			case ROWS:
-				return Number.class;
-			case LOCK_STATUS:
-				return Boolean.class;
-			default:
-				return Object.class;
-		}
+		return switch (property) {
+			case NAME, SHAPE -> String.class;
+			case ROWS -> Number.class;
+			case LOCK_STATUS -> Boolean.class;
+			default -> Object.class;
+		};
 	}
 
 	@Override
 	protected String getPropertyName() {
-		switch (property) {
-			case NAME:
-				return "name";
-			case ROWS:
-				return "size";
-			case SHAPE:
-				return "shape";
-			case LOCK_STATUS:
-				return "lock status";
-			default:
-				return "property";
-		}
+		return switch (property) {
+			case NAME -> "name";
+			case ROWS -> "size";
+			case SHAPE -> "shape";
+			case LOCK_STATUS -> "lock status";
+			default -> "property";
+		};
 	}
 
 }

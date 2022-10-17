@@ -2,7 +2,6 @@ package io.github.apickledwalrus.skriptgui.gui;
 
 import io.github.apickledwalrus.skriptgui.SkriptGUI;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
@@ -15,7 +14,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.eclipse.jdt.annotation.Nullable;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -133,7 +131,6 @@ public class GUI {
 		this.inventory = inventory;
 		this.removableItems = stealableItems;
 		this.name = name;
-		Bukkit.broadcast(Component.text("gui created " + name + inventory));
 		SkriptGUI.getGUIManager().register(this);
 	}
 
