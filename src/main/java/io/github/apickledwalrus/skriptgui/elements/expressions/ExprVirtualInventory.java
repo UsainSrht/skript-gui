@@ -31,18 +31,22 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 				"virtual (1¦(crafting [table]|workbench)|2¦chest|3¦anvil|4¦hopper|5¦dropper|6¦dispenser|%-inventorytype%) [with size %-number%] [(named|with (name|title)) %-string%]",
 				"virtual (1¦(crafting [table]|workbench)|2¦chest|3¦anvil|4¦hopper|5¦dropper|6¦dispenser|%-inventorytype%) [with %-number% row[s]] [(named|with (name|title)) %-string%]",
 				"virtual (1¦(crafting [table]|workbench)|2¦chest|3¦anvil|4¦hopper|5¦dropper|6¦dispenser|%-inventorytype%) [(named|with (name|title)) %-string%] with size %-number%",
-				"virtual (1¦(crafting [table]|workbench)|2¦chest|3¦anvil|4¦hopper|5¦dropper|6¦dispenser|%-inventorytype%) [(named|with (name|title)) %-string%] with %-number% row[s]"
+				"virtual (1¦(crafting [table]|workbench)|2¦chest|3¦anvil|4¦hopper|5¦dropper|6¦dispenser|%-inventorytype%) [(named|with (name|title)) %-string%] with %-number% row[s]",
+				"virtual %-inventorytype% [named component %-adventurecomponent%] [with size %-number%]",
+				"virtual %-inventorytype% [named component %-adventurecomponent%] [with %-number% rows]",
+				"virtual %-inventorytype% [with size %-number%] [named component %-adventurecomponent%]",
+				"virtual %-inventorytype% [with %-number% rows] [named component %-adventurecomponent%]"
 		);
 	}
 
-	@Nullable
-	private InventoryType specifiedType;
 	@Nullable
 	private Expression<InventoryType> inventoryType;
 	@Nullable
 	private Expression<Number> rows;
 	@Nullable
 	private Expression<String> name;
+	@Nullable
+	private Expression<Component> componentName;
 
 	// The name of this inventory.
 	@Nullable
@@ -54,29 +58,27 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 	@SuppressWarnings("unchecked")
 	public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean kleenean, ParseResult parseResult) {
 		inventoryType = (Expression<InventoryType>) exprs[0];
-		if (inventoryType == null) { // They must be using a specific one
-			switch (parseResult.mark) {
-				case 1 -> specifiedType = InventoryType.WORKBENCH;
-				case 2 -> specifiedType = InventoryType.CHEST;
-				case 3 -> specifiedType = InventoryType.ANVIL;
-				case 4 -> specifiedType = InventoryType.HOPPER;
-				case 5 -> specifiedType = InventoryType.DROPPER;
-				case 6 -> specifiedType = InventoryType.DISPENSER;
+		int namePosition;
+		int rowsPosition;
+		switch (matchedPattern) {
+			case 3,4,5,6 -> {
+				namePosition = 1;
+				rowsPosition = 2;
+			}
+			default -> {
+				namePosition = 2;
+				rowsPosition = 1;
 			}
 		}
-		if (matchedPattern > 1) {
-			name = (Expression<String>) exprs[1];
-			rows = (Expression<Number>) exprs[2];
-		} else {
-			name = (Expression<String>) exprs[2];
-			rows = (Expression<Number>) exprs[1];
-		}
+		if (matchedPattern > 3) componentName = (Expression<Component>) exprs[namePosition];
+		else name = (Expression<String>) exprs[namePosition];
+		rows = (Expression<Number>) exprs[rowsPosition];
 		return true;
 	}
 
 	@Override
 	protected Inventory[] get(Event e) {
-		InventoryType type = inventoryType != null ? inventoryType.getSingle(e) : specifiedType;
+		InventoryType type = inventoryType != null ? inventoryType.getSingle(e) : InventoryType.CHEST;
 		if (type == null) {
 			return new Inventory[0];
 		} else if (type == InventoryType.CRAFTING) { // Make it a valid inventory. It's not the same, but it's likely what the user wants.
@@ -84,7 +86,10 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 		}
 
 		String name = this.name != null ? this.name.getSingle(e) : null;
-		if (name == null) invName = type.defaultTitle();
+		if (name == null) {
+			if (componentName == null) invName = type.defaultTitle();
+			else invName = componentName.getSingle(e);
+		}
 		else {
 			Component parsedName;
 			try {
@@ -131,7 +136,7 @@ public class ExprVirtualInventory extends SimpleExpression<Inventory>{
 
 	@Override
 	public String toString(@Nullable Event e, boolean debug) {
-		return "virtual " + (inventoryType != null ? inventoryType.toString(e, debug) : specifiedType != null ? specifiedType.name().toLowerCase() : "unknown inventory type")
+		return "virtual " + (inventoryType != null ? inventoryType.toString(e, debug) : InventoryType.CHEST.name().toLowerCase())
 			+ (name != null ? " with name" + name.toString(e, debug) : "")
 			+ (rows != null ? " with " + rows.toString(e, debug) + " rows" : "");
 	}

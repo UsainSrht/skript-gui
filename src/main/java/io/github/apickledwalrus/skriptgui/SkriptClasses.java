@@ -7,6 +7,7 @@ import ch.njol.skript.lang.ParseContext;
 import ch.njol.skript.registrations.Classes;
 import ch.njol.skript.util.EnumUtils;
 import io.github.apickledwalrus.skriptgui.gui.GUI;
+import net.kyori.adventure.text.Component;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -40,6 +41,29 @@ public class SkriptClasses {
 				}
 			})
 		);
+
+		Classes.registerClass(new ClassInfo<>(Component.class, "adventurecomponent")
+				.user("[adventure][(-| )]component[s]")
+				.name("COMPONENT")
+				.description("Represents an Adventure Component.")
+				.examples("set {_s} to adventure-component")
+				.since("1.3")
+				.parser(new Parser<Component>() {
+					@Override
+					public boolean canParse(ParseContext ctx) {
+						return false;
+					}
+
+					@Override
+					public String toString(Component component, int flags) {
+						return component.toString();
+					}
+
+					@Override
+					public String toVariableNameString(Component component) {
+						return toString(component, 0);
+					}
+				}));
 
 		if (Classes.getExactClassInfo(SlotType.class) == null) {
 			EnumUtils<SlotType> slotTypes = new EnumUtils<>(SlotType.class, "slot types");

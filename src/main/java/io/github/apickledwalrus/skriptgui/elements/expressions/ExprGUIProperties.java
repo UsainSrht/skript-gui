@@ -89,14 +89,17 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 					switch (property) {
 						case NAME -> {
 							String nameToBeParsed = (String) delta[0];
-							Component parsedName;
-							try {
-								parsedName = MiniMessage.miniMessage().deserialize(nameToBeParsed);
+							if (nameToBeParsed != null) {
+								Component parsedName;
+								try {
+									parsedName = MiniMessage.miniMessage().deserialize(nameToBeParsed);
+								}
+								catch (ParsingException ex) {
+									parsedName = lcs.deserialize(nameToBeParsed);
+								}
+								gui.setName(parsedName);
 							}
-							catch (ParsingException ex) {
-								parsedName = lcs.deserialize(nameToBeParsed);
-							}
-							gui.setName(parsedName);
+							else gui.setName((Component) delta[0]);
 						}
 						case ROWS -> gui.setSize(((Number) delta[0]).intValue() * 9);
 						case SHAPE -> {
