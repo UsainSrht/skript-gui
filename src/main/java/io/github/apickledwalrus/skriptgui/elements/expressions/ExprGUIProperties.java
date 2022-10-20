@@ -65,7 +65,7 @@ public class ExprGUIProperties extends SimplePropertyExpression<GUI, Object> {
 		if (mode == ChangeMode.SET || mode == ChangeMode.RESET) {
 			switch (property) {
 				case NAME:
-					return CollectionUtils.array(String.class);
+					return CollectionUtils.array(String.class,Component.class);
 				case ROWS:
 					return CollectionUtils.array(Number.class);
 				case SHAPE:
